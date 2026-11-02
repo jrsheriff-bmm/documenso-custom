@@ -1,6 +1,6 @@
 import Konva from 'konva';
 
-const SNAP_THRESHOLD = 10;
+const SNAP_THRESHOLD = 5;
 
 type SnapPoint = {
   position: number;

@@ -30,7 +30,7 @@ import { msg } from '@lingui/core/macro';
 import { useLingui } from '@lingui/react';
 import { Trans } from '@lingui/react/macro';
 import { DocumentStatus, FieldType, RecipientRole } from '@prisma/client';
-import { AlertTriangleIcon, FileTextIcon, PencilIcon, SparklesIcon } from 'lucide-react';
+import { AlertTriangleIcon, FileTextIcon, MinusIcon, PencilIcon, PlusIcon, SparklesIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRevalidator, useSearchParams } from 'react-router';
 import { isDeepEqual } from 'remeda';
@@ -78,6 +78,11 @@ export const EnvelopeEditorFieldsPage = () => {
   const team = useCurrentTeam();
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+
+  const [canvasZoom, setCanvasZoom] = useState(1);
+  const zoomIn = () => setCanvasZoom((prev) => Math.min(2, Math.round((prev + 0.1) * 10) / 10));
+  const zoomOut = () => setCanvasZoom((prev) => Math.max(0.5, Math.round((prev - 0.1) * 10) / 10));
+  const resetZoom = () => setCanvasZoom(1);
 
   const { envelope, editorFields, navigateToStep, editorConfig } = useCurrentEnvelopeEditor();
 
@@ -286,12 +291,52 @@ export const EnvelopeEditorFieldsPage = () => {
             </Alert>
           )}
 
+          {/* Sticky Canvas Zoom Toolbar */}
+          {currentEnvelopeItem !== null && (
+            <div className="sticky top-2 z-[9999] ml-auto mr-4 -mb-10 flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 px-2.5 py-1 shadow-md backdrop-blur-md transition-all">
+              <button
+                type="button"
+                onClick={zoomOut}
+                disabled={canvasZoom <= 0.5}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-foreground/80 hover:bg-muted hover:text-foreground disabled:opacity-30 transition-colors"
+                title="Zoom Out"
+              >
+                <MinusIcon className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={resetZoom}
+                className="rounded px-2 py-0.5 font-medium text-foreground text-xs hover:bg-muted transition-colors"
+                title="Reset Zoom"
+              >
+                {Math.round(canvasZoom * 100)}%
+              </button>
+              <button
+                type="button"
+                onClick={zoomIn}
+                disabled={canvasZoom >= 2.0}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-foreground/80 hover:bg-muted hover:text-foreground disabled:opacity-30 transition-colors"
+                title="Zoom In"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           {currentEnvelopeItem !== null ? (
-            <EnvelopePdfViewer
-              customPageRenderer={EnvelopeEditorFieldsPageRenderer}
-              scrollParentRef={scrollableContainerRef}
-              errorMessage={PDF_VIEWER_ERROR_MESSAGES.editor}
-            />
+            <div
+              className="flex w-full justify-center transition-transform duration-150"
+              style={{
+                transform: `scale(${canvasZoom})`,
+                transformOrigin: 'top center',
+              }}
+            >
+              <EnvelopePdfViewer
+                customPageRenderer={EnvelopeEditorFieldsPageRenderer}
+                scrollParentRef={scrollableContainerRef}
+                errorMessage={PDF_VIEWER_ERROR_MESSAGES.editor}
+              />
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-32">
               <FileTextIcon className="h-10 w-10 text-muted-foreground" />

@@ -54,13 +54,20 @@ export const upsertFieldRect = (field: FieldToRender, options: RenderFieldElemen
       name: 'field-rect',
     });
 
+  const isSignature = field.type === 'SIGNATURE';
+  const overlayFill = fieldCanvasStyle?.backgroundColor ?? (
+    isSignature
+      ? 'rgba(245, 158, 11, 0.2)' // bg-amber-500/20 glass overlay for signatures
+      : 'rgba(59, 130, 246, 0.2)'  // bg-blue-500/20 glass overlay for standard fields
+  );
+
   fieldRect.setAttrs({
     width: fieldWidth,
     height: fieldHeight,
-    fill: fieldCanvasStyle?.backgroundColor ?? DEFAULT_RECT_BACKGROUND,
-    stroke: fieldCanvasStyle?.borderColor ?? (color ? getRecipientColorStyles(color).baseRing : '#e5e7eb'),
+    fill: overlayFill,
+    stroke: fieldCanvasStyle?.borderColor ?? (color ? getRecipientColorStyles(color).baseRing : (isSignature ? 'rgba(245, 158, 11, 0.8)' : 'rgba(59, 130, 246, 0.8)')),
     strokeWidth: fieldCanvasStyle?.borderWidth ?? 2,
-    cornerRadius: fieldCanvasStyle?.borderRadius ?? 2,
+    cornerRadius: fieldCanvasStyle?.borderRadius ?? 4,
     strokeScaleEnabled: false,
     visible: mode !== 'export',
   } satisfies Partial<Konva.RectConfig>);

@@ -249,7 +249,12 @@ export const EnvelopeEditorFieldDragDrop = ({
             onMouseDown={() => setSelectedField(field.type)}
             data-selected={selectedField === field.type ? true : undefined}
             className={cn(
-              'group flex h-12 cursor-pointer items-center justify-center rounded-lg border border-border px-4 transition-colors',
+              'group relative flex h-12 cursor-pointer items-center justify-center rounded-lg border border-border px-4 transition-all duration-150',
+              selectedField === field.type
+                ? field.type === FieldType.SIGNATURE
+                  ? 'bg-amber-500/20 border-amber-500/50 shadow-sm'
+                  : 'bg-blue-500/20 border-blue-500/50 shadow-sm'
+                : 'hover:border-primary/40 hover:bg-muted/40',
               selectedRecipientStyles.fieldButton,
             )}
           >
@@ -270,12 +275,13 @@ export const EnvelopeEditorFieldDragDrop = ({
       {selectedField && (
         <div
           className={cn(
-            'pointer-events-none fixed z-50 flex cursor-pointer flex-col items-center justify-center rounded-[2px] bg-white font-noto text-muted-foreground ring-2 transition duration-200 [container-type:size] dark:text-muted',
+            'pointer-events-none fixed z-50 flex cursor-pointer flex-col items-center justify-center rounded-md font-noto text-muted-foreground ring-2 shadow-lg backdrop-blur-sm transition duration-200 [container-type:size]',
+            selectedField === FieldType.SIGNATURE
+              ? 'bg-amber-500/25 border border-amber-500/60 text-amber-950 dark:text-amber-100 ring-amber-500/40 font-signature'
+              : 'bg-blue-500/25 border border-blue-500/60 text-blue-950 dark:text-blue-100 ring-blue-500/40',
             selectedRecipientStyles.base,
-            selectedField === FieldType.SIGNATURE && 'font-signature',
             {
-              '-rotate-6 scale-90 opacity-50 dark:bg-black/20': !isFieldWithinBounds,
-              'dark:text-black/60': isFieldWithinBounds,
+              '-rotate-6 scale-90 opacity-60': !isFieldWithinBounds,
             },
           )}
           style={{

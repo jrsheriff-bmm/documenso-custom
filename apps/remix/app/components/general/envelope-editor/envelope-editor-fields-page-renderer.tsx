@@ -13,6 +13,12 @@ import {
   MIN_FIELD_HEIGHT_PX,
   MIN_FIELD_WIDTH_PX,
 } from '@documenso/lib/universal/field-renderer/field-renderer';
+import {
+  getSnappedPosition,
+  hideSnapGuides,
+  initializeSnapGuides,
+  showSnapGuides,
+} from '@documenso/lib/universal/field-renderer/render-grid-lines';
 import { renderField } from '@documenso/lib/universal/field-renderer/render-field';
 import { getClientSideFieldTranslations } from '@documenso/lib/utils/fields';
 import { getOverlappingFieldPairs } from '@documenso/lib/utils/fields-overlap';
@@ -48,6 +54,7 @@ export const EnvelopeEditorFieldsPageRenderer = ({ pageData }: { pageData: PageR
   const { currentEnvelopeItem, setRenderError } = useCurrentEnvelopeRender();
 
   const interactiveTransformer = useRef<Transformer | null>(null);
+  const snapGuideLayer = useRef<Konva.Layer | null>(null);
 
   const [selectedKonvaFieldGroups, setSelectedKonvaFieldGroups] = useState<Konva.Group[]>([]);
 
@@ -154,6 +161,10 @@ export const EnvelopeEditorFieldsPageRenderer = ({ pageData }: { pageData: PageR
       setSelectedFields([fieldGroup]);
     }
 
+    if (snapGuideLayer.current) {
+      hideSnapGuides(snapGuideLayer.current);
+    }
+
     pageLayer.current?.batchDraw();
   };
 
@@ -248,6 +259,23 @@ export const EnvelopeEditorFieldsPageRenderer = ({ pageData }: { pageData: PageR
     fieldGroup.off('click');
     fieldGroup.off('transformend');
     fieldGroup.off('dragend');
+    fieldGroup.off('dragmove');
+
+    fieldGroup.on('dragmove', (event) => {
+      setIsFieldChanging(true);
+      const target = event.target as Konva.Group;
+      if (snapGuideLayer.current && stage.current) {
+        const snap = getSnappedPosition(stage.current, target, target.x(), target.y());
+        target.position({ x: snap.x, y: snap.y });
+        showSnapGuides(
+          snapGuideLayer.current,
+          snap.horizontalGuide,
+          snap.verticalGuide,
+          stage.current.width(),
+          stage.current.height(),
+        );
+      }
+    });
 
     // Set up field selection. Shift + click toggles this field in/out of the current
     // multi-selection, so fields can be added to a group by clicking them --
@@ -296,8 +324,8 @@ export const EnvelopeEditorFieldsPageRenderer = ({ pageData }: { pageData: PageR
    * Initialize the Konva page canvas and all fields and interactions.
    */
   const createPageCanvas = (currentStage: Konva.Stage, currentPageLayer: Konva.Layer) => {
-    // Initialize snap guides layer
-    // snapGuideLayer.current = initializeSnapGuides(stage.current);
+    // Initialize 5px smart alignment snap guides layer
+    snapGuideLayer.current = initializeSnapGuides(currentStage);
 
     // Add transformer for resizing and rotating.
     interactiveTransformer.current = createInteractiveTransformer(currentStage, currentPageLayer);
